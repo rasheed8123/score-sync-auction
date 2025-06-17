@@ -31,8 +31,8 @@ export const OverlayScreen = ({ currentPlayer, currentBid, highlights, auctionTi
     if (currentPlayer) {
       gsap.fromTo(
         '.player-card',
-        { x: -100, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
+        { y: 100, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
       );
     }
   }, [currentPlayer]);
@@ -49,59 +49,62 @@ export const OverlayScreen = ({ currentPlayer, currentBid, highlights, auctionTi
   }, [currentBid]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none">
-      {/* Player Details - Left */}
-      {currentPlayer && (
-        <div className="absolute top-6 left-6 player-card">
-          <Card className="bg-black/80 backdrop-blur-md border-purple-500/30 shadow-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                  <Users className="h-8 w-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">{currentPlayer.name}</h3>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Badge variant="secondary" className="text-xs">{currentPlayer.sport}</Badge>
-                    <Badge className="bg-yellow-500 text-black text-xs">{currentPlayer.category}</Badge>
+    <div className="fixed inset-0 pointer-events-none bg-transparent">
+      {/* Bottom Section with Player and Bid Details */}
+      <div className="absolute bottom-16 left-0 right-0 flex justify-between px-6">
+        {/* Player Details - Left */}
+        {currentPlayer && (
+          <div className="player-card">
+            <Card className="bg-black/90 backdrop-blur-md border-purple-500/50 shadow-2xl">
+              <CardContent className="p-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <Users className="h-6 w-6 text-white" />
                   </div>
-                  <p className="text-sm text-gray-300 mt-1">
-                    Base: ₹{(currentPlayer.basePrice / 100000).toFixed(1)}L
-                  </p>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{currentPlayer.name}</h3>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="secondary" className="text-xs">{currentPlayer.sport}</Badge>
+                      <Badge className="bg-yellow-500 text-black text-xs">{currentPlayer.category}</Badge>
+                    </div>
+                    <p className="text-xs text-gray-300">
+                      Base: ₹{(currentPlayer.basePrice / 100000).toFixed(1)}L
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-      {/* Current Bid - Right */}
-      {currentBid && (
-        <div className="absolute top-6 right-6 bid-card">
-          <Card className="bg-black/80 backdrop-blur-md border-green-500/30 shadow-xl">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <Trophy className="h-8 w-8 mx-auto text-yellow-400 mb-2" />
-                <div className="text-2xl font-bold text-green-400">
-                  ₹{(currentBid.amount / 100000).toFixed(1)}L
+        {/* Current Bid - Right */}
+        {currentBid && (
+          <div className="bid-card">
+            <Card className="bg-black/90 backdrop-blur-md border-green-500/50 shadow-2xl">
+              <CardContent className="p-3">
+                <div className="text-center">
+                  <Trophy className="h-6 w-6 mx-auto text-yellow-400 mb-1" />
+                  <div className="text-xl font-bold text-green-400">
+                    ₹{(currentBid.amount / 100000).toFixed(1)}L
+                  </div>
+                  <div className="text-sm text-blue-400 font-medium">
+                    {currentBid.teamName}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {currentBid.timestamp.toLocaleTimeString()}
+                  </div>
                 </div>
-                <div className="text-lg text-blue-400 font-medium">
-                  {currentBid.teamName}
-                </div>
-                <div className="text-xs text-gray-400">
-                  {currentBid.timestamp.toLocaleTimeString()}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
 
       {/* Bottom Marquee */}
-      <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md border-t border-purple-500/30">
-        <div className="overflow-hidden py-3">
-          <div className="animate-marquee whitespace-nowrap text-white">
-            <span className="text-yellow-400 font-semibold mr-8">
+      <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md border-t border-purple-500/30">
+        <div className="overflow-hidden py-2">
+          <div className="animate-marquee whitespace-nowrap text-white text-sm">
+            <span className="text-yellow-400 font-semibold mr-6">
               🏆 HIGHLIGHTS: 
             </span>
             {highlights.length > 0 ? (
@@ -123,7 +126,7 @@ export const OverlayScreen = ({ currentPlayer, currentBid, highlights, auctionTi
           100% { transform: translateX(-100%); }
         }
         .animate-marquee {
-          animation: marquee 20s linear infinite;
+          animation: marquee 15s linear infinite;
         }
       `}</style>
     </div>

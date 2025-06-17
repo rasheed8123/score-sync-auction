@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,10 @@ import {
   Crown,
   Target,
   Trophy,
-  Monitor
+  Monitor,
+  Download,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { dummyPlayers, dummyTeams, type Player, type Team } from '@/data/dummyData';
 import { dummyBids, type Bid } from '@/data/auctionData';
@@ -38,6 +40,7 @@ export const AdminPanel = () => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [bidIncrement, setBidIncrement] = useState(100000);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [expandedTeams, setExpandedTeams] = useState<string[]>([]);
   const { toast } = useToast();
 
   const startAuction = (player: Player) => {
@@ -166,6 +169,47 @@ export const AdminPanel = () => {
     setPlayers(prev => prev.map(p => 
       p.id === playerId ? { ...p, category } : p
     ));
+  };
+
+  const toggleTeamExpansion = (teamId: string) => {
+    setExpandedTeams(prev => 
+      prev.includes(teamId) 
+        ? prev.filter(id => id !== teamId)
+        : [...prev, teamId]
+    );
+  };
+
+  const exportTeamData = (team: Team) => {
+    const teamData = {
+      teamName: team.name,
+      sport: team.sport,
+      totalBudget: team.budget,
+      remainingBudget: team.remainingBudget,
+      spentBudget: team.budget - team.remainingBudget,
+      totalPlayers: team.players.length,
+      players: team.players.map(player => ({
+        name: player.name,
+        category: player.category,
+        basePrice: player.basePrice,
+        soldPrice: player.currentPrice || player.basePrice,
+        sport: player.sport
+      }))
+    };
+
+    const dataStr = JSON.stringify(teamData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `${team.name.replace(/\s+/g, '_')}_team_data.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+
+    toast({
+      title: "Export Successful",
+      description: `${team.name} data has been exported.`,
+    });
   };
 
   useEffect(() => {
@@ -448,7 +492,16 @@ export const AdminPanel = () => {
                   <CardHeader>
                     <CardTitle className="text-white flex items-center justify-between">
                       <span>{team.name}</span>
-                      <Badge variant="secondary">{team.sport}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{team.sport}</Badge>
+                        <Button
+                          onClick={() => exportTeamData(team)}
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -463,6 +516,8 @@ export const AdminPanel = () => {
                         <span className="text-gray-400">Players:</span>
                         <span className="text-white">{team.players.length}</span>
                       </div>
+                      
+                      {/* Recent Acquisitions */}
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium text-gray-300">Recent Acquisitions:</h4>
                         {team.players.slice(0, 3).map((player, index) => (
@@ -473,6 +528,44 @@ export const AdminPanel = () => {
                             </span>
                           </div>
                         ))}
+                      </div>
+
+                      {/* Full Team Dropdown */}
+                      <div className="pt-2 border-t border-white/10">
+                        <Button
+                          onClick={() => toggleTeamExpansion(team.id)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-white/20 text-white hover:bg-white/10"
+                        >
+                          <span>Full Team Details</span>
+                          {expandedTeams.includes(team.id) ? (
+                            <ChevronUp className="h-4 w-4 ml-2" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 ml-2" />
+                          )}
+                        </Button>
+                        
+                        {expandedTeams.includes(team.id) && (
+                          <div className="mt-3 space-y-2 max-h-40 overflow-y-auto">
+                            {team.players.map((player, index) => (
+                              <div key={index} className="flex items-center justify-between text-xs p-2 bg-white/5 rounded">
+                                <div>
+                                  <div className="text-white font-medium">{player.name}</div>
+                                  <div className="text-gray-400">{player.category} • {player.sport}</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-green-400">
+                                    ₹{((player.currentPrice || player.basePrice) / 100000).toFixed(1)}L
+                                  </div>
+                                  <div className="text-gray-500 text-xs">
+                                    Base: ₹{(player.basePrice / 100000).toFixed(1)}L
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>

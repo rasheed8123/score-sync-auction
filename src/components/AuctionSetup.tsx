@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,15 +19,17 @@ export const AuctionSetup = () => {
     rules: ''
   });
   const [categories, setCategories] = useState<Category[]>([]);
+  const [teamConstraints, setTeamConstraints] = useState({
+    minPlayersPerTeam: '',
+    maxPlayersPerTeam: ''
+  });
   const [newCategory, setNewCategory] = useState({ 
     name: '', 
     description: '', 
     color: 'bg-blue-500',
     minAmount: '',
     maxAmount: '',
-    bidIncrement: '',
-    minPlayersPerTeam: '',
-    maxPlayersPerTeam: ''
+    bidIncrement: ''
   });
   const { toast } = useToast();
 
@@ -53,8 +56,8 @@ export const AuctionSetup = () => {
       minAmount: Number(newCategory.minAmount),
       maxAmount: Number(newCategory.maxAmount),
       bidIncrement: Number(newCategory.bidIncrement),
-      minPlayersPerTeam: Number(newCategory.minPlayersPerTeam),
-      maxPlayersPerTeam: Number(newCategory.maxPlayersPerTeam)
+      minPlayersPerTeam: Number(teamConstraints.minPlayersPerTeam) || 0,
+      maxPlayersPerTeam: Number(teamConstraints.maxPlayersPerTeam) || 99
     };
     
     setCategories([...categories, category]);
@@ -64,9 +67,7 @@ export const AuctionSetup = () => {
       color: 'bg-blue-500',
       minAmount: '',
       maxAmount: '',
-      bidIncrement: '',
-      minPlayersPerTeam: '',
-      maxPlayersPerTeam: ''
+      bidIncrement: ''
     });
     
     toast({
@@ -173,90 +174,97 @@ export const AuctionSetup = () => {
         </CardContent>
       </Card>
 
-      {/* Enhanced Categories Management */}
+      {/* Team Constraints - Set Once */}
+      <Card className="bg-black/20 backdrop-blur-lg border-white/10">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center">
+            <Users className="h-5 w-5 mr-2" />
+            Team Constraints (Apply to All Categories)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-white">Minimum Players per Team</Label>
+              <Input
+                placeholder="e.g., 11"
+                type="number"
+                value={teamConstraints.minPlayersPerTeam}
+                onChange={(e) => setTeamConstraints({...teamConstraints, minPlayersPerTeam: e.target.value})}
+                className="bg-white/10 border-white/20 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white">Maximum Players per Team</Label>
+              <Input
+                placeholder="e.g., 18"
+                type="number"
+                value={teamConstraints.maxPlayersPerTeam}
+                onChange={(e) => setTeamConstraints({...teamConstraints, maxPlayersPerTeam: e.target.value})}
+                className="bg-white/10 border-white/20 text-white"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Player Categories */}
       <Card className="bg-black/20 backdrop-blur-lg border-white/10">
         <CardHeader>
           <CardTitle className="text-white flex items-center">
             <Settings className="h-5 w-5 mr-2" />
-            Player Categories & Rules
+            Player Categories
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Basic Info */}
-            <div className="space-y-4">
-              <h4 className="text-white font-medium">Basic Information</h4>
-              <Input
-                placeholder="Category name (e.g., A+)"
-                value={newCategory.name}
-                onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
-                className="bg-white/10 border-white/20 text-white"
-              />
-              <Input
-                placeholder="Description"
-                value={newCategory.description}
-                onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
-                className="bg-white/10 border-white/20 text-white"
-              />
-              <select
-                value={newCategory.color}
-                onChange={(e) => setNewCategory({...newCategory, color: e.target.value})}
-                className="w-full px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white"
-              >
-                {colorOptions.map(color => (
-                  <option key={color} value={color} className="bg-gray-800">
-                    {color.replace('bg-', '').replace('-500', '')}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Input
+              placeholder="Category name (e.g., A+)"
+              value={newCategory.name}
+              onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+              className="bg-white/10 border-white/20 text-white"
+            />
+            <Input
+              placeholder="Description"
+              value={newCategory.description}
+              onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+              className="bg-white/10 border-white/20 text-white"
+            />
+            <select
+              value={newCategory.color}
+              onChange={(e) => setNewCategory({...newCategory, color: e.target.value})}
+              className="w-full px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white"
+            >
+              {colorOptions.map(color => (
+                <option key={color} value={color} className="bg-gray-800">
+                  {color.replace('bg-', '').replace('-500', '')}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Financial Rules */}
-            <div className="space-y-4">
-              <h4 className="text-white font-medium">Financial Rules</h4>
-              <Input
-                placeholder="Minimum Amount (₹)"
-                type="number"
-                value={newCategory.minAmount}
-                onChange={(e) => setNewCategory({...newCategory, minAmount: e.target.value})}
-                className="bg-white/10 border-white/20 text-white"
-              />
-              <Input
-                placeholder="Maximum Amount (₹)"
-                type="number"
-                value={newCategory.maxAmount}
-                onChange={(e) => setNewCategory({...newCategory, maxAmount: e.target.value})}
-                className="bg-white/10 border-white/20 text-white"
-              />
-              <Input
-                placeholder="Bid Increment (₹)"
-                type="number"
-                value={newCategory.bidIncrement}
-                onChange={(e) => setNewCategory({...newCategory, bidIncrement: e.target.value})}
-                className="bg-white/10 border-white/20 text-white"
-              />
-            </div>
-
-            {/* Team Constraints */}
-            <div className="space-y-4 md:col-span-2">
-              <h4 className="text-white font-medium">Team Constraints</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  placeholder="Min Players per Team"
-                  type="number"
-                  value={newCategory.minPlayersPerTeam}
-                  onChange={(e) => setNewCategory({...newCategory, minPlayersPerTeam: e.target.value})}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-                <Input
-                  placeholder="Max Players per Team"
-                  type="number"
-                  value={newCategory.maxPlayersPerTeam}
-                  onChange={(e) => setNewCategory({...newCategory, maxPlayersPerTeam: e.target.value})}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Input
+              placeholder="Minimum Amount (₹)"
+              type="number"
+              value={newCategory.minAmount}
+              onChange={(e) => setNewCategory({...newCategory, minAmount: e.target.value})}
+              className="bg-white/10 border-white/20 text-white"
+            />
+            <Input
+              placeholder="Maximum Amount (₹)"
+              type="number"
+              value={newCategory.maxAmount}
+              onChange={(e) => setNewCategory({...newCategory, maxAmount: e.target.value})}
+              className="bg-white/10 border-white/20 text-white"
+            />
+            <Input
+              placeholder="Bid Increment (₹)"
+              type="number"
+              value={newCategory.bidIncrement}
+              onChange={(e) => setNewCategory({...newCategory, bidIncrement: e.target.value})}
+              className="bg-white/10 border-white/20 text-white"
+            />
           </div>
 
           <Button onClick={addCategory} className="w-full bg-green-600 hover:bg-green-700">
@@ -284,12 +292,10 @@ export const AuctionSetup = () => {
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-gray-400">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-gray-400">
                   <div>Min: ₹{(category.minAmount / 100000).toFixed(1)}L</div>
                   <div>Max: ₹{(category.maxAmount / 100000).toFixed(1)}L</div>
                   <div>Increment: ₹{(category.bidIncrement / 100000).toFixed(1)}L</div>
-                  <div>Min Players: {category.minPlayersPerTeam}</div>
-                  <div>Max Players: {category.maxPlayersPerTeam}</div>
                 </div>
               </div>
             ))}
