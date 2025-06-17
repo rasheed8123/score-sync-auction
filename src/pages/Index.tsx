@@ -5,6 +5,7 @@ import { AdminPanel } from '@/components/AdminPanel';
 import { PlayerRegistration } from '@/components/PlayerRegistration';
 import { Login } from '@/components/Login';
 import { Navbar } from '@/components/Navbar';
+import { OverlayScreen } from '@/components/OverlayScreen';
 import { useState } from 'react';
 
 const Index = () => {
@@ -12,12 +13,26 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/register" element={<PlayerRegistration />} />
-        <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
-        <Route path="/admin" element={isLoggedIn ? <AdminPanel /> : <Login setIsLoggedIn={setIsLoggedIn} />} />
+        <Route path="/overlay" element={
+          <OverlayScreen 
+            currentPlayer={null}
+            currentBid={null}
+            highlights={["Welcome to the auction!"]}
+            auctionTitle="Premier Sports Auction 2024"
+          />
+        } />
+        <Route path="/*" element={
+          <>
+            <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/register" element={<PlayerRegistration />} />
+              <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+              <Route path="/admin" element={isLoggedIn ? <AdminPanel /> : <Login setIsLoggedIn={setIsLoggedIn} />} />
+            </Routes>
+          </>
+        } />
       </Routes>
     </div>
   );

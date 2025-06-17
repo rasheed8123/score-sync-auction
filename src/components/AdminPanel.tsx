@@ -16,20 +16,28 @@ import {
   Plus,
   Minus,
   Crown,
-  Target
+  Target,
+  Trophy,
+  Monitor
 } from 'lucide-react';
 import { dummyPlayers, dummyTeams, type Player, type Team } from '@/data/dummyData';
+import { dummyBids, type Bid } from '@/data/auctionData';
 import { useToast } from '@/hooks/use-toast';
+import { AuctionSetup } from '@/components/AuctionSetup';
+import { LiveBidding } from '@/components/LiveBidding';
+import { OverlayScreen } from '@/components/OverlayScreen';
 import gsap from 'gsap';
 
 export const AdminPanel = () => {
   const [players, setPlayers] = useState<Player[]>(dummyPlayers);
   const [teams] = useState<Team[]>(dummyTeams);
+  const [bids, setBids] = useState<Bid[]>(dummyBids);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isAuctionActive, setIsAuctionActive] = useState(false);
   const [currentBid, setCurrentBid] = useState(0);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [bidIncrement, setBidIncrement] = useState(100000);
+  const [showOverlay, setShowOverlay] = useState(false);
   const { toast } = useToast();
 
   const startAuction = (player: Player) => {
@@ -46,6 +54,27 @@ export const AdminPanel = () => {
     toast({
       title: "Auction Started",
       description: `Bidding for ${player.name} has begun!`,
+    });
+  };
+
+  const handleNewBid = (teamName: string, amount: number) => {
+    if (!currentPlayer) return;
+
+    const newBid: Bid = {
+      id: Date.now().toString(),
+      playerId: currentPlayer.id,
+      teamName,
+      amount,
+      timestamp: new Date(),
+      auctionId: '1'
+    };
+
+    setBids(prev => [...prev, newBid]);
+    setCurrentBid(amount);
+
+    toast({
+      title: "New Bid Placed",
+      description: `${teamName} bid ₹${(amount / 100000).toFixed(1)}L for ${currentPlayer.name}`,
     });
   };
 
@@ -66,6 +95,18 @@ export const AdminPanel = () => {
       });
       return;
     }
+
+    // Add final bid
+    const finalBid: Bid = {
+      id: Date.now().toString(),
+      playerId: currentPlayer.id,
+      teamName: selectedTeam,
+      amount: currentBid,
+      timestamp: new Date(),
+      auctionId: '1'
+    };
+
+    setBids(prev => [...prev, finalBid]);
 
     setPlayers(prev => prev.map(p => 
       p.id === currentPlayer.id 
@@ -115,6 +156,18 @@ export const AdminPanel = () => {
     });
   };
 
+  const setPlayerBasePrice = (playerId: string, basePrice: number) => {
+    setPlayers(prev => prev.map(p => 
+      p.id === playerId ? { ...p, basePrice } : p
+    ));
+  };
+
+  const setPlayerCategory = (playerId: string, category: string) => {
+    setPlayers(prev => prev.map(p => 
+      p.id === playerId ? { ...p, category } : p
+    ));
+  };
+
   useEffect(() => {
     // Animate cards on load
     gsap.fromTo(
@@ -134,22 +187,67 @@ export const AdminPanel = () => {
   const unsoldPlayers = players.filter(p => p.status === 'unsold');
   const yetToAuction = players.filter(p => p.status === 'yet-to-auction');
 
+  const teamNames = teams.map(team => team.name);
+  const currentPlayerBids = currentPlayer 
+    ? bids.filter(bid => bid.playerId === currentPlayer.id)
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    : [];
+  const currentHighestBid = currentPlayerBids[0];
+
+  const highlights = [
+    "Rajesh Kumar sold to Mumbai Warriors for ₹3.2L",
+    "Intense bidding war for Priya Sharma between 3 teams!",
+    "Chennai Challengers leading with aggressive bids",
+    "Football auction starts next with exciting young talents"
+  ];
+
+  if (showOverlay) {
+    return (
+      <div className="relative">
+        <Button
+          onClick={() => setShowOverlay(false)}
+          className="absolute top-4 right-4 z-20 bg-red-600 hover:bg-red-700"
+        >
+          Exit Overlay
+        </Button>
+        <OverlayScreen 
+          currentPlayer={currentPlayer}
+          currentBid={currentHighestBid}
+          highlights={highlights}
+          auctionTitle="Premier Sports Auction 2024"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Auction Control Panel
-          </h1>
-          <p className="text-gray-300">
-            Manage the live auction from here
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Auction Control Panel
+            </h1>
+            <p className="text-gray-300">
+              Manage the live auction from here
+            </p>
+          </div>
+          <Button
+            onClick={() => setShowOverlay(true)}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Monitor className="h-4 w-4 mr-2" />
+            Show Overlay
+          </Button>
         </div>
 
         <Tabs defaultValue="auction" className="space-y-6">
           <TabsList className="bg-black/20 border-white/10">
             <TabsTrigger value="auction" className="data-[state=active]:bg-white data-[state=active]:text-black">
               Live Auction
+            </TabsTrigger>
+            <TabsTrigger value="setup" className="data-[state=active]:bg-white data-[state=active]:text-black">
+              Auction Setup
             </TabsTrigger>
             <TabsTrigger value="players" className="data-[state=active]:bg-white data-[state=active]:text-black">
               Manage Players
@@ -163,100 +261,13 @@ export const AdminPanel = () => {
           </TabsList>
 
           <TabsContent value="auction" className="space-y-6">
-            {/* Live Auction Control */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Current Auction */}
-              <Card className="bg-black/20 backdrop-blur-lg border-white/10 admin-card">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Gavel className="h-5 w-5 mr-2" />
-                    Current Auction
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {currentPlayer ? (
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <h3 className="text-2xl font-bold text-white mb-2">
-                          {currentPlayer.name}
-                        </h3>
-                        <div className="flex justify-center gap-2 mb-4">
-                          <Badge variant="secondary">{currentPlayer.sport}</Badge>
-                          <Badge variant="outline" className="border-white/20 text-gray-300">
-                            {currentPlayer.category}
-                          </Badge>
-                        </div>
-                        <div className="text-3xl font-bold text-green-400 mb-4">
-                          ₹{(currentBid / 100000).toFixed(1)}L
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-center gap-2 mb-4">
-                        <Button
-                          onClick={decreaseBid}
-                          size="sm"
-                          variant="outline"
-                          className="border-white/20 text-white"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="text-white px-4">
-                          ₹{(bidIncrement / 100000).toFixed(1)}L
-                        </span>
-                        <Button
-                          onClick={increaseBid}
-                          size="sm"
-                          variant="outline"
-                          className="border-white/20 text-white"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-white">Select Team</Label>
-                        <select
-                          value={selectedTeam}
-                          onChange={(e) => setSelectedTeam(e.target.value)}
-                          className="w-full px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white"
-                        >
-                          <option value="">Select a team...</option>
-                          {teams
-                            .filter(team => team.sport === currentPlayer.sport)
-                            .map(team => (
-                              <option key={team.id} value={team.name} className="bg-gray-800">
-                                {team.name} (₹{(team.remainingBudget / 10000000).toFixed(1)}Cr left)
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={sellPlayer}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                          disabled={!selectedTeam}
-                        >
-                          <Crown className="h-4 w-4 mr-2" />
-                          Sell
-                        </Button>
-                        <Button
-                          onClick={markUnsold}
-                          className="flex-1 bg-red-600 hover:bg-red-700"
-                        >
-                          Mark Unsold
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Target className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                      <p className="text-gray-400">No auction in progress</p>
-                      <p className="text-sm text-gray-500">Select a player to start bidding</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <LiveBidding
+                currentPlayer={currentPlayer}
+                bids={bids}
+                onNewBid={handleNewBid}
+                teams={teamNames}
+              />
 
               {/* Players Queue */}
               <Card className="bg-black/20 backdrop-blur-lg border-white/10 admin-card">
@@ -292,6 +303,40 @@ export const AdminPanel = () => {
               </Card>
             </div>
 
+            {/* Quick Actions */}
+            {currentPlayer && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Button
+                  onClick={increaseBid}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Increase Bid
+                </Button>
+                <Button
+                  onClick={decreaseBid}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  <Minus className="h-4 w-4 mr-2" />
+                  Decrease Bid
+                </Button>
+                <Button
+                  onClick={sellPlayer}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={!selectedTeam}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Sell Player
+                </Button>
+                <Button
+                  onClick={markUnsold}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Mark Unsold
+                </Button>
+              </div>
+            )}
+
             {/* Auction Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="bg-black/20 backdrop-blur-lg border-white/10 admin-card">
@@ -321,6 +366,10 @@ export const AdminPanel = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="setup">
+            <AuctionSetup />
+          </TabsContent>
+
           <TabsContent value="players" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {players.map((player) => (
@@ -341,7 +390,28 @@ export const AdminPanel = () => {
                     </div>
                     <div className="text-sm text-gray-400 space-y-1">
                       <p>{player.sport} • {player.category}</p>
-                      <p>Base: ₹{(player.basePrice / 100000).toFixed(1)}L</p>
+                      <div className="flex items-center gap-2">
+                        <span>Base:</span>
+                        <input
+                          type="number"
+                          value={player.basePrice}
+                          onChange={(e) => setPlayerBasePrice(player.id, Number(e.target.value))}
+                          className="w-20 px-1 py-0.5 text-xs bg-white/10 border border-white/20 rounded text-white"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>Category:</span>
+                        <select
+                          value={player.category}
+                          onChange={(e) => setPlayerCategory(player.id, e.target.value)}
+                          className="px-1 py-0.5 text-xs bg-white/10 border border-white/20 rounded text-white"
+                        >
+                          <option value="A+">A+</option>
+                          <option value="A">A</option>
+                          <option value="B+">B+</option>
+                          <option value="B">B</option>
+                        </select>
+                      </div>
                       {player.currentPrice && (
                         <p>Sold: ₹{(player.currentPrice / 100000).toFixed(1)}L</p>
                       )}

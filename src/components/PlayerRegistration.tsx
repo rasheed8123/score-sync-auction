@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { UserPlus, Upload, Check } from 'lucide-react';
+import { UserPlus, Upload, Check, QrCode } from 'lucide-react';
 import { auctionConfig } from '@/data/dummyData';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,18 +14,30 @@ export const PlayerRegistration = () => {
     name: '',
     sport: '',
     category: '',
-    basePrice: '',
     experience: '',
     achievements: '',
     contact: '',
     email: ''
   });
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
 
+  const registrationFee = 1000; // ₹1000 registration fee
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!paymentScreenshot) {
+      toast({
+        title: "Payment Required",
+        description: "Please upload payment screenshot to complete registration.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Simulate API call
@@ -43,17 +55,28 @@ export const PlayerRegistration = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPaymentScreenshot(file);
+      toast({
+        title: "File Uploaded",
+        description: `Payment screenshot "${file.name}" uploaded successfully.`,
+      });
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
       sport: '',
       category: '',
-      basePrice: '',
       experience: '',
       achievements: '',
       contact: '',
       email: ''
     });
+    setPaymentScreenshot(null);
     setIsSubmitted(false);
   };
 
@@ -164,40 +187,6 @@ export const PlayerRegistration = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-white">Category *</Label>
-                  <select
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="w-full px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white"
-                    required
-                    disabled={!formData.sport}
-                  >
-                    <option value="">Select a category...</option>
-                    {formData.sport && auctionConfig.categories[formData.sport]?.map(category => (
-                      <option key={category} value={category} className="bg-gray-800">
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="basePrice" className="text-white">Expected Base Price (₹) *</Label>
-                  <Input
-                    id="basePrice"
-                    type="number"
-                    placeholder="e.g., 500000"
-                    value={formData.basePrice}
-                    onChange={(e) => handleInputChange('basePrice', e.target.value)}
-                    className="bg-white/10 border-white/20 text-white placeholder-gray-400"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
                   <Label htmlFor="contact" className="text-white">Contact Number *</Label>
                   <Input
                     id="contact"
@@ -244,6 +233,62 @@ export const PlayerRegistration = () => {
                   <Button type="button" variant="outline" className="mt-2 border-white/20 text-white hover:bg-white/10">
                     Choose File
                   </Button>
+                </div>
+              </div>
+
+              {/* Payment Section */}
+              <div className="space-y-4 border-t border-white/20 pt-6">
+                <h3 className="text-lg font-semibold text-white flex items-center">
+                  <QrCode className="h-5 w-5 mr-2" />
+                  Registration Fee Payment
+                </h3>
+                
+                <div className="bg-white/5 rounded-lg p-4">
+                  <p className="text-white mb-4">
+                    Registration Fee: <span className="font-bold text-green-400">₹{registrationFee}</span>
+                  </p>
+                  
+                  {/* QR Code Placeholder */}
+                  <div className="bg-white rounded-lg p-4 inline-block">
+                    <div className="w-48 h-48 bg-gray-200 flex items-center justify-center">
+                      <QrCode className="h-16 w-16 text-gray-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 text-sm text-gray-300">
+                    <p>UPI ID: auction@example.com</p>
+                    <p>Account: 1234567890</p>
+                    <p>IFSC: EXAMPLE123</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white">Upload Payment Screenshot *</Label>
+                  <div className="border-2 border-dashed border-white/20 rounded-lg p-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="payment-screenshot"
+                    />
+                    <label htmlFor="payment-screenshot" className="cursor-pointer block text-center">
+                      {paymentScreenshot ? (
+                        <div className="text-green-400">
+                          <Check className="h-12 w-12 mx-auto mb-2" />
+                          <p>Payment screenshot uploaded: {paymentScreenshot.name}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                          <p className="text-gray-400 mb-2">Upload payment screenshot</p>
+                          <Button type="button" variant="outline" className="border-white/20 text-white">
+                            Choose File
+                          </Button>
+                        </div>
+                      )}
+                    </label>
+                  </div>
                 </div>
               </div>
 
