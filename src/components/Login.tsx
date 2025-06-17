@@ -24,7 +24,9 @@ export const Login = ({ setIsLoggedIn }: LoginProps) => {
     setIsLoading(true);
     try {
       const res = await axios.post('/api/auth/login', { username, password });
-      // Optionally store token: localStorage.setItem('token', res.data.token);
+      localStorage.setItem('token', res.data.token);
+      // Set up axios default authorization header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       setIsLoggedIn(true);
       toast({
         title: "Login Successful",

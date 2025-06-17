@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Trophy, UserPlus, Settings, Home, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import axios from 'axios';
 
 interface NavbarProps {
   isLoggedIn: boolean;
@@ -13,6 +14,8 @@ export const Navbar = ({ isLoggedIn, setIsLoggedIn }: NavbarProps) => {
   const location = useLocation();
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
     setIsLoggedIn(false);
   };
 
