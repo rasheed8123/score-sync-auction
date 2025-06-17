@@ -1,25 +1,52 @@
-
 import { useState, useEffect } from 'react';
 import { Search, Filter, Trophy, Users, DollarSign, TrendingUp, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { dummyPlayers, dummyTeams, type Player, type Team } from '@/data/dummyData';
-import { dummyBids, type Bid } from '@/data/auctionData';
+import { type Player, type Team, type Bid } from '../types/models';
 import { PlayerCard } from '@/components/PlayerCard';
 import { TeamCard } from '@/components/TeamCard';
 import { StatsCard } from '@/components/StatsCard';
 import gsap from 'gsap';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
 export const Dashboard = () => {
-  const [players] = useState<Player[]>(dummyPlayers);
-  const [teams] = useState<Team[]>(dummyTeams);
-  const [bids] = useState<Bid[]>(dummyBids);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSport, setSelectedSport] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [activeTab, setActiveTab] = useState<'players' | 'teams' | 'live'>('live');
+
+  const { data: playersRaw, isLoading: loadingPlayers, error: errorPlayers } = useQuery({
+    queryKey: ['players'],
+    queryFn: async () => {
+      const res = await axios.get('/api/players');
+      return res.data;
+    },
+    initialData: [],
+  });
+  const players: Player[] = Array.isArray(playersRaw) ? playersRaw : [];
+
+  const { data: teamsRaw, isLoading: loadingTeams, error: errorTeams } = useQuery({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const res = await axios.get('/api/teams');
+      return res.data;
+    },
+    initialData: [],
+  });
+  const teams: Team[] = Array.isArray(teamsRaw) ? teamsRaw : [];
+
+  const { data: bidsRaw, isLoading: loadingBids, error: errorBids } = useQuery({
+    queryKey: ['bids'],
+    queryFn: async () => {
+      const res = await axios.get('/api/bids');
+      return res.data;
+    },
+    initialData: [],
+  });
+  const bids: Bid[] = Array.isArray(bidsRaw) ? bidsRaw : [];
 
   const filteredPlayers = players.filter(player => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase());

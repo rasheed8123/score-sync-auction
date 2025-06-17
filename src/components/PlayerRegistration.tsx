@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { UserPlus, Upload, Check, QrCode } from 'lucide-react';
-import { auctionConfig } from '@/data/dummyData';
+import { type Player } from '../types/models';
 import { useToast } from '@/hooks/use-toast';
+import axios from 'axios';
 
 export const PlayerRegistration = () => {
   const [formData, setFormData] = useState({
@@ -28,7 +28,6 @@ export const PlayerRegistration = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!paymentScreenshot) {
       toast({
         title: "Payment Required",
@@ -37,18 +36,30 @@ export const PlayerRegistration = () => {
       });
       return;
     }
-
     setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const form = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        form.append(key, value);
+      });
+      form.append('paymentScreenshot', paymentScreenshot);
+      await axios.post('/api/players/register', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       setIsSubmitted(true);
-      setIsSubmitting(false);
       toast({
         title: "Registration Successful!",
         description: "Your registration has been submitted for review.",
       });
-    }, 1500);
+    } catch (err: any) {
+      toast({
+        title: "Registration Failed",
+        description: err.response?.data?.error || 'Something went wrong.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -95,14 +106,14 @@ export const PlayerRegistration = () => {
             <div className="space-y-3">
               <Button 
                 onClick={resetForm}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                className="w-full bg-white text-black hover:bg-gray-100 hover:text-black"
               >
                 Register Another Player
               </Button>
               <Button 
                 onClick={() => window.location.href = '/'}
                 variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10"
+                className="w-full bg-white text-black hover:bg-gray-100 hover:text-black"
               >
                 View Dashboard
               </Button>
@@ -178,7 +189,7 @@ export const PlayerRegistration = () => {
                     required
                   >
                     <option value="">Select a sport...</option>
-                    {auctionConfig.sports.map(sport => (
+                    {["Cricket", "Football", "Badminton", "Volleyball", "Tennis"].map(sport => (
                       <option key={sport} value={sport} className="bg-gray-800">
                         {sport}
                       </option>
@@ -230,7 +241,11 @@ export const PlayerRegistration = () => {
                   <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                   <p className="text-gray-400 mb-2">Click to upload or drag and drop</p>
                   <p className="text-sm text-gray-500">PNG, JPG up to 5MB</p>
-                  <Button type="button" variant="outline" className="mt-2 border-white/20 text-white hover:bg-white/10">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="bg-white text-black hover:bg-gray-100 hover:text-black"
+                  >
                     Choose File
                   </Button>
                 </div>
@@ -282,7 +297,11 @@ export const PlayerRegistration = () => {
                         <div>
                           <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                           <p className="text-gray-400 mb-2">Upload payment screenshot</p>
-                          <Button type="button" variant="outline" className="border-white/20 text-white">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            className="bg-white text-black hover:bg-gray-100 hover:text-black"
+                          >
                             Choose File
                           </Button>
                         </div>
@@ -308,7 +327,7 @@ export const PlayerRegistration = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                className="w-full bg-white text-black hover:bg-gray-100 hover:text-black"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit Registration"}

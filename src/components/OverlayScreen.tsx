@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, Users, Clock } from 'lucide-react';
-import { type Player } from '@/data/dummyData';
-import { type Bid } from '@/data/auctionData';
+import { type Player, type Bid } from '@/types/models';
 import gsap from 'gsap';
 
 interface OverlayScreenProps {

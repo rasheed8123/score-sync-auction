@@ -1,8 +1,7 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, DollarSign, User } from 'lucide-react';
-import { type Player } from '@/data/dummyData';
+import { type Player } from '@/types/models';
 
 interface PlayerCardProps {
   player: Player;

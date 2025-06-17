@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Trophy, UserPlus, Settings, Home } from 'lucide-react';
+import { Menu, X, Trophy, UserPlus, Settings, Home, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface NavbarProps {
@@ -65,18 +64,22 @@ export const Navbar = ({ isLoggedIn, setIsLoggedIn }: NavbarProps) => {
                     <Settings className="h-4 w-4" />
                     <span>Admin Panel</span>
                   </Link>
-                  <Button 
+                  <Button
+                    variant="outline"
+                    className="bg-white text-black hover:bg-gray-100 hover:text-black"
                     onClick={handleLogout}
-                    variant="outline" 
-                    size="sm"
-                    className="border-white/20 text-white hover:bg-white/10"
                   >
+                    <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </Button>
                 </>
               ) : (
                 <Link to="/login">
-                  <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="bg-white text-black hover:bg-gray-100 hover:text-black"
+                  >
                     Admin Login
                   </Button>
                 </Link>
@@ -137,7 +140,7 @@ export const Navbar = ({ isLoggedIn, setIsLoggedIn }: NavbarProps) => {
             ) : (
               <Link
                 to="/login"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium bg-white text-black hover:bg-gray-100 hover:text-black"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <span>Admin Login</span>

@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { Dashboard } from '@/components/Dashboard';
 import { AdminPanel } from '@/components/AdminPanel';
@@ -7,6 +6,7 @@ import { Login } from '@/components/Login';
 import { Navbar } from '@/components/Navbar';
 import OverlayPage from '@/pages/OverlayPage';
 import { useState } from 'react';
+import { AuctionEdit } from '@/components/AuctionEdit';
 
 const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -23,6 +23,7 @@ const Index = () => {
               <Route path="/register" element={<PlayerRegistration />} />
               <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
               <Route path="/admin" element={isLoggedIn ? <AdminPanel /> : <Login setIsLoggedIn={setIsLoggedIn} />} />
+              <Route path="/auction/edit/:id" element={<AuctionEdit />} />
             </Routes>
           </>
         } />

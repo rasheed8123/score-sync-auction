@@ -1,22 +1,31 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, TrendingUp, Users, Gavel } from 'lucide-react';
-import { type Player } from '@/data/dummyData';
-import { type Bid } from '@/data/auctionData';
+import { type Player, type Bid, type Team } from '@/types/models';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
 interface LiveBiddingProps {
   currentPlayer: Player | null;
   bids: Bid[];
   onNewBid: (teamName: string, amount: number) => void;
-  teams: string[];
+  auctionId: string;
 }
 
-export const LiveBidding = ({ currentPlayer, bids, onNewBid, teams }: LiveBiddingProps) => {
+export const LiveBidding = ({ currentPlayer, bids, onNewBid, auctionId }: LiveBiddingProps) => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [bidAmount, setBidAmount] = useState(0);
+
+  // Fetch teams associated with this auction
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams', auctionId],
+    queryFn: async () => {
+      const res = await axios.get(`/api/teams/auction/${auctionId}`);
+      return res.data;
+    },
+  });
 
   useEffect(() => {
     if (currentPlayer) {
@@ -97,8 +106,10 @@ export const LiveBidding = ({ currentPlayer, bids, onNewBid, teams }: LiveBiddin
                 className="px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white"
               >
                 <option value="">Select Team...</option>
-                {teams.map(team => (
-                  <option key={team} value={team} className="bg-gray-800">{team}</option>
+                {teams.map((team: Team) => (
+                  <option key={team._id} value={team.name} className="bg-gray-800">
+                    {team.name} (₹{(team.remainingBudget / 100000).toFixed(1)}L)
+                  </option>
                 ))}
               </select>
               <div className="flex items-center gap-2">
@@ -126,34 +137,17 @@ export const LiveBidding = ({ currentPlayer, bids, onNewBid, teams }: LiveBiddin
       {/* Bid History */}
       <Card className="bg-black/20 backdrop-blur-lg border-white/10">
         <CardHeader>
-          <CardTitle className="text-white flex items-center">
-            <TrendingUp className="h-5 w-5 mr-2" />
-            Bid History
-          </CardTitle>
+          <CardTitle className="text-white">Bid History</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="space-y-2">
             {playerBids.map((bid, index) => (
-              <div 
-                key={bid.id} 
-                className={`flex items-center justify-between p-3 rounded-lg ${
-                  index === 0 ? 'bg-green-500/20' : 'bg-white/5'
-                }`}
-              >
-                <div>
-                  <p className="text-white font-medium">{bid.teamName}</p>
-                  <p className="text-xs text-gray-400">
-                    {bid.timestamp.toLocaleTimeString()}
-                  </p>
+              <div key={bid.id} className="flex items-center justify-between bg-white/5 p-2 rounded">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">#{playerBids.length - index}</span>
+                  <span className="text-white">{bid.teamName}</span>
                 </div>
-                <div className="text-right">
-                  <p className="text-green-400 font-bold">
-                    ₹{(bid.amount / 100000).toFixed(1)}L
-                  </p>
-                  {index === 0 && (
-                    <Badge className="bg-green-500">Highest</Badge>
-                  )}
-                </div>
+                <div className="text-green-400">₹{(bid.amount / 100000).toFixed(1)}L</div>
               </div>
             ))}
           </div>

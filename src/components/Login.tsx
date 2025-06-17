@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Lock, User, AlertCircle } from 'lucide-react';
-import { demoCredentials } from '@/data/dummyData';
 import { useToast } from '@/hooks/use-toast';
+import axios from 'axios';
 
 interface LoginProps {
   setIsLoggedIn: (value: boolean) => void;
@@ -23,25 +22,24 @@ export const Login = ({ setIsLoggedIn }: LoginProps) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      if (username === demoCredentials.username && password === demoCredentials.password) {
-        setIsLoggedIn(true);
-        toast({
-          title: "Login Successful",
-          description: "Welcome to the Admin Panel!",
-        });
-        navigate('/admin');
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid username or password.",
-          variant: "destructive",
-        });
-      }
+    try {
+      const res = await axios.post('/api/auth/login', { username, password });
+      // Optionally store token: localStorage.setItem('token', res.data.token);
+      setIsLoggedIn(true);
+      toast({
+        title: "Login Successful",
+        description: "Welcome to the Admin Panel!",
+      });
+      navigate('/admin');
+    } catch (err: any) {
+      toast({
+        title: "Login Failed",
+        description: err.response?.data?.error || "Invalid username or password.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -89,24 +87,12 @@ export const Login = ({ setIsLoggedIn }: LoginProps) => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                className="w-full bg-white text-black hover:bg-gray-100 hover:text-black"
                 disabled={isLoading}
               >
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <div className="flex items-center mb-2">
-                <AlertCircle className="h-4 w-4 text-blue-400 mr-2" />
-                <span className="text-sm font-medium text-blue-400">Demo Credentials</span>
-              </div>
-              <div className="text-sm text-gray-300 space-y-1">
-                <p><strong>Username:</strong> {demoCredentials.username}</p>
-                <p><strong>Password:</strong> {demoCredentials.password}</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
